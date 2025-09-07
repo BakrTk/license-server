@@ -1,5 +1,17 @@
+# Node
 node_modules/
-.env
-data/
-*.db*
 npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Env & keys
+.env
+.env.*
+
+# SQLite data (سنجعل المسار على Render لاحقًا في /var/data)
+data/
+*.db
+
+# OS junk
+.DS_Store
+Thumbs.db
