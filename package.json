@@ -9,7 +9,9 @@
     "start": "node server.js",
     "render-start": "node tools/seed-once.js && node server.js",
     "gen:keys": "node tools/gen-keys.js",
-    "seed:once": "node tools/seed-once.js"
+    "seed:once": "node tools/seed-once.js",
+    "lic:new": "node tools/new-license.js",
+    "lic:list": "node tools/list-licenses.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
