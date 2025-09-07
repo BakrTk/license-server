@@ -1,19 +1,21 @@
 {
   "name": "license-server",
-  "version": "1.0.0",
   "type": "module",
-  "main": "server.js",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
+    "start": "node server.js",
     "dev": "node server.js",
     "gen:keys": "node tools/gen-keys.js",
-    "seed": "node tools/seed.js"
+    "seed:once": "node tools/seed-once.js"
   },
   "dependencies": {
     "better-sqlite3": "^9.4.0",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "tweetnacl": "^1.0.3",
-    "tweetnacl-util": "^0.15.1"
+    "tweetnacl": "^1.0.3"
   }
 }
