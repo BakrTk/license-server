@@ -14,8 +14,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = Number(process.env.PORT || 3000);
-const DB_PATH =
-  process.env.DB_PATH || path.join(__dirname, "data", "licenses.db");
+
+// مهم: استخدم DB_PATH من البيئة (Render) أو ملف محلي أثناء التطوير
+const DB_PATH = path.resolve(process.env.DB_PATH || "./data/license.sqlite");
 const PRIV_B64 = process.env.PRIVATE_KEY_B64;
 const PUB_B64 = process.env.PUBLIC_KEY_B64;
 
@@ -24,13 +25,13 @@ if (!PRIV_B64 || !PUB_B64) {
   process.exit(1);
 }
 
-// تأكد وجود مجلد قاعدة البيانات
+// تأكد من وجود مجلد قاعدة البيانات
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
-// فتح القاعدة
+// افتح القاعدة
 const db = new Database(DB_PATH);
 
-// إنشاء الجداول إن لم توجد
+// أنشئ الجداول إن لم توجد
 db.exec(`
 CREATE TABLE IF NOT EXISTS licenses (
   id TEXT PRIMARY KEY,
@@ -48,8 +49,8 @@ CREATE TABLE IF NOT EXISTS assignments (
 `);
 
 // مفاتيح NaCl
-const sk = Uint8Array.from(Buffer.from(PRIV_B64, "base64")); // 64 bytes
-const pk = Uint8Array.from(Buffer.from(PUB_B64, "base64")); // 32 bytes
+const sk = Uint8Array.from(Buffer.from(PRIV_B64, "base64")); // يجب أن تكون 64 بايت (secretKey)
+const pk = Uint8Array.from(Buffer.from(PUB_B64, "base64")); // يجب أن تكون 32 بايت (publicKey)
 
 // base64url helper
 const toB64Url = (buf) =>
@@ -59,7 +60,7 @@ const toB64Url = (buf) =>
     .replace(/\//g, "_")
     .replace(/=+$/g, "");
 
-// يوقّع حمولة JSON
+// يوقع حمولة JSON ويُعيد token (payload.signature)
 function jsonToken(payloadObj) {
   const payloadBytes = Buffer.from(JSON.stringify(payloadObj), "utf8");
   const sig = nacl.sign.detached(payloadBytes, sk);
@@ -69,7 +70,7 @@ function jsonToken(payloadObj) {
 const app = express();
 app.use(express.json());
 
-// صحّة السيرفر
+// صحة السيرفر
 app.get("/healthz", (_, res) => res.json({ ok: true }));
 
 // نقطة التفعيل
@@ -89,6 +90,7 @@ app.post("/api/v1/activate", (req, res) => {
     const assignedCount = db
       .prepare("SELECT COUNT(*) AS c FROM assignments WHERE license_id=?")
       .get(lic.id).c;
+
     const existing = db
       .prepare("SELECT 1 FROM assignments WHERE license_id=? AND hw=?")
       .get(lic.id, hw);
@@ -114,8 +116,9 @@ app.post("/api/v1/activate", (req, res) => {
       features: [],
       ver: ver || "0.0.0",
     };
+
     const token = jsonToken(payload);
-    return res.json({ token });
+    return res.json({ token, pubKeyB64: Buffer.from(pk).toString("base64") });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "server_error" });
@@ -125,5 +128,6 @@ app.post("/api/v1/activate", (req, res) => {
 // ابدأ السيرفر (مهم: 0.0.0.0 لـ Render)
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ License server listening on 0.0.0.0:${PORT}`);
-  console.log("Public Key (Base64):", PUB_B64);
+  console.log("Public Key (Base64):", Buffer.from(pk).toString("base64"));
+  console.log("DB Path:", DB_PATH);
 });

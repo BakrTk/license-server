@@ -1,13 +1,13 @@
 {
   "name": "license-server",
-  "type": "module",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "20.11.1"
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
+    "render-start": "node tools/seed-once.js && node server.js",
     "gen:keys": "node tools/gen-keys.js",
     "seed:once": "node tools/seed-once.js"
   },

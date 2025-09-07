@@ -1,13 +1,17 @@
+// tools/seed-once.js
 import Database from "better-sqlite3";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+
 dotenv.config();
 
-const DB_PATH = process.env.DB_PATH || "./data/licenses.db";
+const DB_PATH = path.resolve(process.env.DB_PATH || "./data/license.sqlite");
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+
 const db = new Database(DB_PATH);
 
+// نفس الجداول لضمان وجودها
 db.exec(`
 CREATE TABLE IF NOT EXISTS licenses (
   id TEXT PRIMARY KEY,
@@ -24,8 +28,8 @@ CREATE TABLE IF NOT EXISTS assignments (
 );
 `);
 
-const hasAny = db.prepare("SELECT 1 FROM licenses LIMIT 1").get();
-if (hasAny) {
+const exists = db.prepare("SELECT 1 FROM licenses LIMIT 1").get();
+if (exists) {
   console.log("ℹ️ Licenses already exist. Skipping seed.");
   process.exit(0);
 }
@@ -33,13 +37,14 @@ if (hasAny) {
 const licId = "lic_" + Math.random().toString(36).slice(2, 10);
 const key =
   "ALY-" + Math.random().toString(36).slice(2, 8).toUpperCase() + "-2025";
-db.prepare("INSERT INTO licenses(id, key, seats, status) VALUES(?,?,?,?)").run(
+
+db.prepare("INSERT INTO licenses(id, key, seats, status) VALUES (?,?,?,?)").run(
   licId,
   key,
   1,
   "active"
 );
 
-console.log("✅ Seeded one license.");
+console.log("✅ Seeded one license");
 console.log("License ID :", licId);
 console.log("License KEY:", key);
